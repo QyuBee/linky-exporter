@@ -2,8 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    tags:
-      - 'v*.*.*'  # déclenche sur tags versionnés, ex: v1.0.0
+    branches:
+      - main
 
 jobs:
   build-and-push:
@@ -16,14 +16,6 @@ jobs:
         run: |
           REPO_NAME=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=ghcr.io/${REPO_NAME}/linky-exporter" >> $GITHUB_ENV
-
-      - name: Extract version
-        run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
-          else
-            echo "VERSION=latest" >> $GITHUB_ENV
-          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -41,8 +33,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker buildx build \
-            --platform linux/amd64,linux/arm/v7 \
-            -t ghcr.io/qyubee/$IMAGE_NAME:$VERSION \
-            -t ghcr.io/qyubee/$IMAGE_NAME:latest \
+            --platform linux/amd64,linux/arm64 \
+            -t ghcr.io/qyubee/$IMAGE_NAME:multiarch  \
             --push \
             .
